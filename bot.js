@@ -104,7 +104,7 @@ bot.hears(/.*/, async(ctx) => {
     try {
         if (ctx.session.waitingForMonth) {
             const month = ctx.message.text; 
-            ctx.reply(`You entered: ${month}`);
+            // ctx.reply(`You entered: ${month}`);
             ctx.session.month = month;
             
             const monthData =await CalculateExpense(month);
@@ -116,7 +116,7 @@ bot.hears(/.*/, async(ctx) => {
         else if(ctx.session.waitingForMonthDetail){
             const month = ctx.message.text ;
             ctx.session.waitingForMonthDetail = false;
-            ctx.reply(month);
+            // ctx.reply(month);
             const monthData =await CalculateExpenseDetail(month);
 
             ctx.reply('Expense details for the month are: \n' + monthData);

@@ -13,6 +13,8 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.use(session());
 
+let money = 2000 ; 
+
 let CalculateExpense = async (month) => {
     const monthData = await monthModel.findOne({ name: month });
     if (!monthData) {
@@ -23,8 +25,6 @@ let CalculateExpense = async (month) => {
         monthData.expense.forEach((expense) => {
             total += expense.amount;
         });
-        // console.log("calculateing")
-        // console.log(total)
         return total; 
     }
 ;}
@@ -43,33 +43,40 @@ let CalculateExpenseDetail = async (month) => {
     }
 }
 
-
-bot.command('start', (ctx) => {
-    ctx.reply('Here we go');
-});
-
-bot.command('add', async(ctx) =>{
-    const [name, amount] = ctx.message.text.split(' ').slice(1);
-    const date = new Date().toDateString();
-
+let getMonth = () => {
     const monthNames = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ];
     const ind = new Date().getMonth();
     const currentMonth = monthNames[ind] + ' ' + new Date().getFullYear();
+    return currentMonth;
+}
+
+bot.command('start', (ctx) => {
+    ctx.reply('Hello I am your bot. I can help you manage your expenses. \nType /show to see the total expense for the month. \nType /add to add an expense. \nType /showDetail to see the details of the expenses for the month.');
+});
+
+
+
+bot.command('add', async(ctx) =>{
+    const [name, amount] = ctx.message.text.split(' ').slice(1);
+    const date = new Date().toDateString();
+
+    const currentMonth = getMonth();
+    
     const existingMonth = await monthModel.findOne({ name: currentMonth });
-    // console.log(name)
+    
     if ((!name) || (!amount)) {
         ctx.reply('Please provide both name and amount.');
         return;
     }
     if (existingMonth && name && amount ) {
         existingMonth.expense.push({ name, amount, date });
-        // console.log('exist');
+        
         await existingMonth.save();
     } else {
-        const newMonth = new monthModel({ name: currentMonth, expense: [{ name, amount, date }] });
+        const newMonth = new monthModel({ name: currentMonth,budget:money, expense: [{ name, amount, date }] });
         await newMonth.save();
     }
 
@@ -81,8 +88,9 @@ bot.catch((err, ctx) => {
 });
 
 
+
 bot.command('showDetail', async (ctx) => {
-    // console.log('ansh command received');
+    
     ctx.session = ctx.session || {};
     ctx.reply('Enter the month : ');
     ctx.session.waitingForMonthDetail = true;
@@ -97,7 +105,35 @@ bot.command('show', (ctx) => {
     ctx.session.waitingForMonth = true;
 });
 
-// bot.command('add', async(ctx) =>{
+bot.command('setBudget', async(ctx)=>{
+    const [budget] = ctx.message.text.split(' ').slice(1);
+    money = budget;
+    const currentMonth = getMonth();
+    
+    const existingMonth = await monthModel.findOne({ name: currentMonth });
+
+
+    if (existingMonth) {
+        existingMonth.budget = budget;
+        await existingMonth.save();
+        
+    } else {
+        const newMonth = new monthModel({ name: currentMonth,budget:money, expense: [] });
+        await newMonth.save();
+    }
+
+});
+
+
+bot.command('remainingBudget',async(ctx)=>{
+    const currentMonth = getMonth();
+    const existingMonth = await monthModel.findOne({ name: currentMonth });
+    const currentExpense = await CalculateExpense(currentMonth);
+    const remaining = existingMonth.budget - currentExpense;
+
+    ctx.reply('Remaining budget for the month is : ' + remaining);
+});
+
 bot.hears(/.*/, async(ctx) => {
 
     ctx.session = ctx.session || {};

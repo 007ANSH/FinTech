@@ -7,7 +7,8 @@ const client = new MongoClient(process.env.MONGO_URL);
 mongoose.connect(process.env.MONGO_URL);
 
 const month = mongoose.Schema({
-    name : String, 
+    name : String,
+    budget : Number, 
     expense : [
         {
             name : String,

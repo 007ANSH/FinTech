@@ -3,11 +3,12 @@ import axios  from 'axios';
 import { MongoClient } from 'mongodb';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-
+import express from 'express';
 dotenv.config();
 import monthModel from './database.js';
 
-
+const app = express();
+const port = process.env.PORT || 3000;
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -168,4 +169,12 @@ bot.hears(/.*/, async(ctx) => {
 
 bot.launch().catch((err)=>{
     console.log("error happened");
+});
+
+app.get('/', (req, res) => {
+    res.send('Bot is running');
+});
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
